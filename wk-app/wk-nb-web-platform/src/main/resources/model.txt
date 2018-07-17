@@ -1,0 +1,37 @@
+分页查询
+ public Result favoriteslist(Integer page, Integer size, String user_id) {
+        Cnd cnd = Cnd.where("a.delFlag", "=", false).and("a.user_id", "=", user_id);
+        if (page == null || page < 0) {
+            page = 1;
+        }
+        if (size == null || size < 0) {
+            size = 10;
+        }
+        Pager pager = new Pager(page, size);
+        Sql sql = Sqls.create("SELECT a.course_id,a.user_id,a.createAt,b.title,b.picurl,b.play_num FROM tw_user_favorite a LEFT JOIN tw_course b on a.course_id=b.id $condition");
+        sql.setCondition(cnd);
+        sql.setPager(pager);
+        int total = this.count(Sqls.create(String.format("select count(*) from (%s) tmp", sql.toString())));
+        //sql.setCallback(new FilePathSqlCallback(Arrays.asList(new String[]{"picurl"}),sysConfigService.getFilesDomain()));
+        sql.setCallback(Sqls.callback.maps());
+        sql = this.dao().execute(sql);
+        NutMap re = NutMap.NEW();
+        re.addv("total", total);
+        re.addv("page", page);
+        re.addv("size", size);
+        re.addv("list", sql.getList(Map.class));
+        return Result.success("success", re);
+ }
+
+ // 查询指定 字段数据
+ List<Tw_enterprise> list  = twEnterpriseService.query("^(id|name|opAt)$",cnd);
+    // 需要 的字段
+  @Ok("json:{actived:'^(id|name|opAt)$'}")
+    // 过滤的字段
+  @Ok("json:{^(locked:'delFlag|opBy)$'}")
+ // 文件夹
+  String path = SensitiveWordInit.class.getResource("/static/words/SensitiveWords.txt").getPath();
+
+  jquery 验证用法
+data-parsley-min="1"  data-parsley-type="integer" data-parsley-required="true"
+data-parsley-phone="true"
